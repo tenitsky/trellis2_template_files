@@ -1,141 +1,77 @@
 #!/bin/bash
-# =============================================================
-# runpod_trellis2_start.sh
-# Bootstrap for the Trellis2 RunPod template (image: runpod/comfyui:cuda12.8)
-#
-# Runs as the container START COMMAND on a CLEAN pod:
-#   curl -fsSL https://raw.githubusercontent.com/tenitsky/trellis2_template_files/main/runpod_trellis2_start.sh | bash
-#
-# It must do EVERYTHING (the start command replaces the image's own
-# startup): install nodes, download models, then run ComfyUI in the
-# FOREGROUND so the container stays alive.
-#
-# Zero interaction. Idempotent: if a network volume is attached, the
-# second boot skips everything already done and starts in ~1 min.
-# Without a volume everything is ephemeral and reinstalls each boot.
-#
-# Optional template env vars:
-#   HF_TOKEN        - HuggingFace token (needed if DinoV3 is gated for you)
-#   COMFY_PORT      - default 8188
-#   SKIP_JUPYTER=1  - don't start JupyterLab
-# =============================================================
-set -uo pipefail   # NOT -e: one failed nicety must not kill the pod
+echo "=== Ensuring System Dependencies are Installed ==="
+apt-get update && apt-get install -y wget ca-certificates git
 
-LOG=/workspace/trellis2_boot.log
-mkdir -p /workspace
-exec > >(tee -a "$LOG") 2>&1
+echo "=== Starting TRELLIS2 Template Setup ==="
 
-echo "=============================================="
-echo "TRELLIS2 template bootstrap - $(date)"
-echo "=============================================="
+# Correct ComfyUI path for runpod/comfyui:cuda12.8
+COMFYUI_PATH="/workspace/runpod-slim/ComfyUI"
 
-COMFY_PORT="${COMFY_PORT:-8188}"
-
-# --- 1. Find ComfyUI in the image (or clone it) ---
-COMFY_DIR=""
-for c in /workspace/ComfyUI /ComfyUI /workspace/runpod-slim/ComfyUI /comfyui; do
-    [ -f "$c/main.py" ] && COMFY_DIR="$c" && break
-done
-if [ -z "$COMFY_DIR" ]; then
-    echo "No ComfyUI in image -> cloning to /workspace/ComfyUI"
-    git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
-    COMFY_DIR=/workspace/ComfyUI
+# Self-heal: if ComfyUI isn't in the workspace yet, copy the baked build in
+if [ ! -f "$COMFYUI_PATH/main.py" ]; then
+  echo "First time setup: Copying baked ComfyUI to workspace..."
+  rm -rf "$COMFYUI_PATH"
+  mkdir -p /workspace/runpod-slim
+  cp -r /opt/comfyui-baked "$COMFYUI_PATH"
 fi
-echo "ComfyUI: $COMFY_DIR"
 
-# --- 2. Find the python that ComfyUI should run under ---
-# Prefer an image venv with torch; fall back to system python3.
-PY=""
-for p in /venv/bin/python /opt/venv/bin/python /workspace/venv/bin/python \
-         "$COMFY_DIR/venv/bin/python" /usr/bin/python3; do
-    if [ -x "$p" ] && "$p" -c "import torch" 2>/dev/null; then PY="$p"; break; fi
-done
-if [ -z "$PY" ]; then
-    PY=$(command -v python3)
-    echo "No torch-bearing python found; will install torch into $PY"
-fi
+# Use the image's cu128 venv (confirmed from a live pod), fall back to pip
+PY="$COMFYUI_PATH/.venv-cu128/bin/python"
+[ -x "$PY" ] || PY="$(command -v python3)"
 PIP="$PY -m pip"
-echo "Python: $PY ($($PY --version 2>&1))"
+echo "Using python: $PY"
 
-# --- 3. Build env: caches on /workspace, arch list for THIS pod's GPU ---
-COMPUTE_CAP=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1 || echo "")
-GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1 || echo "unknown")
-echo "GPU: $GPU_NAME (compute cap: ${COMPUTE_CAP:-unknown})"
-
+# Caches + build env on /workspace; arch list for THIS pod's GPU
+COMPUTE_CAP=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1)
 export PIP_CACHE_DIR=/workspace/.pip-cache
 export COMFY_ENV_ROOT=/workspace/.ce
 export PIXI_CACHE_DIR=/workspace/.pixi-cache
 export RATTLER_CACHE_DIR=/workspace/.pixi-cache
 export TMPDIR=/workspace/tmp
 export HF_HOME=/workspace/.cache/huggingface
-export HUGGINGFACE_HUB_CACHE=/workspace/.cache/huggingface/hub
 export TORCH_CUDA_ARCH_LIST="${COMPUTE_CAP:-8.9;12.0}"
 export MAX_JOBS=$(( $(nproc) > 8 ? 8 : $(nproc) ))
 mkdir -p "$PIP_CACHE_DIR" "$COMFY_ENV_ROOT" "$PIXI_CACHE_DIR" "$TMPDIR" "$HF_HOME"
 [ -n "${HF_TOKEN:-}" ] && export HUGGING_FACE_HUB_TOKEN="$HF_TOKEN"
 
-# --- 4. Ensure a cu128 torch >= 2.7 (Blackwell + 40xx) ---
-TORCH_OK=$("$PY" - <<'PYEOF' 2>/dev/null || echo no
-import torch
-v = torch.__version__.split("+")[0].split(".")[:2]
-ok = (torch.version.cuda or "").startswith("12.8") and tuple(map(int, v)) >= (2, 7)
-print("yes" if ok else "no")
-PYEOF
-)
-if [ "$(echo "$TORCH_OK" | tail -1)" != "yes" ]; then
-    echo "Installing torch (cu128)..."
-    $PIP install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
-fi
-"$PY" -c "import torch; x=torch.randn(8,8,device='cuda'); (x@x).sum().item(); print('GPU kernel test OK:', torch.__version__)" \
-    || echo "WARNING: GPU kernel test failed -- generation may not work on this host"
-
-# --- 5. Install custom nodes ---
-cd "$COMFY_DIR/custom_nodes"
-
-clone_if_missing() { [ -d "$2" ] || git clone --depth 1 "$1" "$2"; }
-
-# comfy-env FIRST: TRELLIS2/GeometryPack prestartup + install.py need it
+# 1. comfy-env FIRST -- TRELLIS2/GeometryPack prestartup + install.py need it.
+#    --ignore-installed forces it into THIS venv so pod restarts don't lose it.
+echo "Installing comfy-env into the ComfyUI venv..."
 $PIP install --ignore-installed comfy-env
-"$PY" -c "import comfy_env" || { echo "FATAL: comfy_env failed to install"; }
 
-clone_if_missing https://github.com/PozzettiAndrea/ComfyUI-TRELLIS2.git ComfyUI-TRELLIS2
-( cd ComfyUI-TRELLIS2 && $PIP install -r requirements.txt && "$PY" install.py ) \
-    || echo "WARNING: TRELLIS2 install step reported errors -- check log"
+# 2. Clone custom nodes into the official ComfyUI directory
+echo "Installing custom nodes..."
+mkdir -p "$COMFYUI_PATH/custom_nodes"
+cd "$COMFYUI_PATH/custom_nodes"
+[ -d ComfyUI-TRELLIS2 ]    || git clone --depth 1 https://github.com/PozzettiAndrea/ComfyUI-TRELLIS2.git ComfyUI-TRELLIS2
+[ -d ComfyUI-GeometryPack ] || git clone --depth 1 https://github.com/PozzettiAndrea/ComfyUI-GeometryPack.git ComfyUI-GeometryPack
 
-clone_if_missing https://github.com/PozzettiAndrea/ComfyUI-GeometryPack.git ComfyUI-GeometryPack
-( cd ComfyUI-GeometryPack && $PIP install -r requirements.txt && "$PY" install.py ) \
-    || echo "WARNING: GeometryPack install step reported errors -- check log"
+# 3. Install node requirements (auto-discovered, like the Z-Image template)
+echo "Installing node requirements..."
+find "$COMFYUI_PATH/custom_nodes/" -name "requirements.txt" -exec $PIP install -r {} \;
 
-clone_if_missing https://github.com/ltdrdata/ComfyUI-Manager.git ComfyUI-Manager
+# 4. Run the TRELLIS2/GeometryPack build steps (compiles CUDA extensions)
+echo "Running node install.py build steps..."
+( cd "$COMFYUI_PATH/custom_nodes/ComfyUI-TRELLIS2"    && "$PY" install.py ) || echo "WARN: TRELLIS2 install.py errors"
+( cd "$COMFYUI_PATH/custom_nodes/ComfyUI-GeometryPack" && "$PY" install.py ) || echo "WARN: GeometryPack install.py errors"
 
-# --- 6. Model weights (resume-safe; skipped in seconds if present) ---
-cd "$COMFY_DIR"
-mkdir -p models/trellis
+# 5. Download TRELLIS.2 model weights (resume-safe; skipped if present)
+echo "Preparing model directories..."
+mkdir -p "$COMFYUI_PATH/models/trellis"
 $PIP install -q -U huggingface-hub
-HF_BIN=$(dirname "$PY")/hf
-[ -x "$HF_BIN" ] || HF_BIN=$(dirname "$PY")/huggingface-cli
-"$HF_BIN" download microsoft/TRELLIS.2-4B --local-dir models/trellis/ \
-    || echo "WARNING: TRELLIS weights download failed -- retry by restarting the pod"
-
-# Pre-fetch DinoV3 (image encoder). If gated for this account, TRELLIS2
-# retries at first run; set HF_TOKEN env var on the template if needed.
-"$HF_BIN" download facebook/dinov3-vitl16-pretrain-lvd1689m 2>/dev/null \
-    || echo "NOTE: DinoV3 not pre-fetched (gated or offline); will retry at first workflow run"
-
-# --- 7. JupyterLab in background (file access for users) ---
-if [ "${SKIP_JUPYTER:-0}" != "1" ]; then
-    if "$PY" -c "import jupyterlab" 2>/dev/null || $PIP install -q jupyterlab; then
-        nohup "$PY" -m jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser \
-            --NotebookApp.token="${JUPYTER_PASSWORD:-}" \
-            > /workspace/jupyter.log 2>&1 &
-        echo "JupyterLab started on :8888"
-    fi
+HF_BIN="$(dirname "$PY")/hf"
+[ -x "$HF_BIN" ] || HF_BIN="$(dirname "$PY")/huggingface-cli"
+if [ -z "$(ls -A "$COMFYUI_PATH/models/trellis/" 2>/dev/null)" ]; then
+  echo "Downloading TRELLIS.2-4B weights..."
+  "$HF_BIN" download microsoft/TRELLIS.2-4B --local-dir "$COMFYUI_PATH/models/trellis/"
+else
+  echo "TRELLIS weights already exist, skipping."
 fi
 
-# --- 8. Launch ComfyUI in the FOREGROUND (keeps container alive) ---
-echo "=============================================="
-echo "Bootstrap done - starting ComfyUI on :$COMFY_PORT"
-echo "Log: $LOG"
-echo "=============================================="
-cd "$COMFY_DIR"
-exec "$PY" main.py --listen 0.0.0.0 --port "$COMFY_PORT"
+# 6. Pre-fetch DinoV3 image encoder (TRELLIS2 needs it at first run)
+"$HF_BIN" download facebook/dinov3-vitl16-pretrain-lvd1689m 2>/dev/null \
+  || echo "NOTE: DinoV3 not pre-fetched (gated/offline); retries at first workflow run"
+
+# 7. Start ComfyUI using the official RunPod entrypoint
+echo "Setup complete! Handing over to start script..."
+exec /start.sh
