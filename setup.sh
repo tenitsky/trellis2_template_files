@@ -23,16 +23,39 @@ echo "Using python: $PY"
 
 # Caches + build env on /workspace; arch list for THIS pod's GPU
 COMPUTE_CAP=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1)
-export PIP_CACHE_DIR=/workspace/.pip-cache
-export COMFY_ENV_ROOT=/workspace/.ce
-export PIXI_CACHE_DIR=/workspace/.pixi-cache
-export RATTLER_CACHE_DIR=/workspace/.pixi-cache
-export TMPDIR=/workspace/tmp
+# Caches go on EPHEMERAL container disk (/root, /tmp) so they don't
+# bloat the persistent network volume. Only the built envs (COMFY_ENV_ROOT)
+# and downloaded model weights need to persist.
+#   Before this fix, .pixi-cache (28GB) + .pip-cache lived on the volume
+#   as dead weight -- duplicates of packages already extracted into .ce.
+export PIP_CACHE_DIR=/root/.pip-cache
+export COMFY_ENV_ROOT=/workspace/.ce          # built envs: KEEP on volume
+export PIXI_CACHE_DIR=/root/.pixi-cache
+export RATTLER_CACHE_DIR=/root/.pixi-cache
+export UV_CACHE_DIR=/root/.uv-cache
+export TMPDIR=/tmp
+# HF cache PERSISTS: --local-dir downloads don't duplicate into it (it stays
+# tiny), but DinoV3 + runtime model pulls live here -- ephemeral would mean
+# re-downloading them every boot.
 export HF_HOME=/workspace/.cache/huggingface
 export TORCH_CUDA_ARCH_LIST="${COMPUTE_CAP:-8.9;12.0}"
 export MAX_JOBS=$(( $(nproc) > 8 ? 8 : $(nproc) ))
-mkdir -p "$PIP_CACHE_DIR" "$COMFY_ENV_ROOT" "$PIXI_CACHE_DIR" "$TMPDIR" "$HF_HOME"
+mkdir -p "$PIP_CACHE_DIR" "$COMFY_ENV_ROOT" "$PIXI_CACHE_DIR" "$UV_CACHE_DIR" "$TMPDIR" "$HF_HOME"
 [ -n "${HF_TOKEN:-}" ] && export HUGGING_FACE_HUB_TOKEN="$HF_TOKEN"
+
+# Persist the env for MANUAL shells too: without COMFY_ENV_ROOT set, a manual
+# ComfyUI restart would make comfy-env rebuild all pixi envs on ephemeral ~/.ce
+# (slow + wasted GB). Guarded so re-runs don't duplicate.
+if ! grep -q "COMFY_ENV_ROOT" /root/.bashrc 2>/dev/null; then
+  {
+    echo ""
+    echo "# TRELLIS2 template env"
+    echo "export COMFY_ENV_ROOT=/workspace/.ce"
+    echo "export HF_HOME=/workspace/.cache/huggingface"
+    echo "export PIXI_CACHE_DIR=/root/.pixi-cache"
+    echo "export RATTLER_CACHE_DIR=/root/.pixi-cache"
+  } >> /root/.bashrc
+fi
 
 # 1. comfy-env FIRST -- TRELLIS2/GeometryPack prestartup + install.py need it.
 #    --ignore-installed forces it into THIS venv so pod restarts don't lose it.
@@ -45,6 +68,8 @@ mkdir -p "$COMFYUI_PATH/custom_nodes"
 cd "$COMFYUI_PATH/custom_nodes"
 [ -d ComfyUI-TRELLIS2 ]    || git clone --depth 1 https://github.com/PozzettiAndrea/ComfyUI-TRELLIS2.git ComfyUI-TRELLIS2
 [ -d ComfyUI-GeometryPack ] || git clone --depth 1 https://github.com/PozzettiAndrea/ComfyUI-GeometryPack.git ComfyUI-GeometryPack
+# WAS Node Suite (maintained ltdrdata fork -- original author retired)
+[ -d was-node-suite-comfyui ] || git clone --depth 1 https://github.com/ltdrdata/was-node-suite-comfyui.git was-node-suite-comfyui
 
 # 3. Install node requirements (auto-discovered, like the Z-Image template)
 echo "Installing node requirements..."
@@ -61,17 +86,30 @@ mkdir -p "$COMFYUI_PATH/models/trellis"
 $PIP install -q -U huggingface-hub
 HF_BIN="$(dirname "$PY")/hf"
 [ -x "$HF_BIN" ] || HF_BIN="$(dirname "$PY")/huggingface-cli"
-if [ -z "$(ls -A "$COMFYUI_PATH/models/trellis/" 2>/dev/null)" ]; then
-  echo "Downloading TRELLIS.2-4B weights..."
-  "$HF_BIN" download microsoft/TRELLIS.2-4B --local-dir "$COMFYUI_PATH/models/trellis/"
-else
-  echo "TRELLIS weights already exist, skipping."
-fi
+# Always run: hf download resumes partial downloads and no-ops in seconds
+# when complete. (A non-empty-dir check would skip forever on a download
+# that a crashed pod left half-finished.)
+echo "Downloading/verifying TRELLIS.2-4B weights..."
+"$HF_BIN" download microsoft/TRELLIS.2-4B --local-dir "$COMFYUI_PATH/models/trellis/"
 
 # 6. Pre-fetch DinoV3 image encoder (TRELLIS2 needs it at first run)
 "$HF_BIN" download facebook/dinov3-vitl16-pretrain-lvd1689m 2>/dev/null \
   || echo "NOTE: DinoV3 not pre-fetched (gated/offline); retries at first workflow run"
 
-# 7. Start ComfyUI using the official RunPod entrypoint
+# 7. Copy ALL bundled workflows into ComfyUI so they show in the Workflows
+#    sidebar. The cmd override cloned this whole repo to /tmp/temp_repo, so
+#    the workflows/ folder is already on disk there.
+echo "Installing workflows..."
+WF_DEST="$COMFYUI_PATH/user/default/workflows"
+mkdir -p "$WF_DEST"
+if [ -d /tmp/temp_repo/workflows ]; then
+  cp -rf /tmp/temp_repo/workflows/. "$WF_DEST/" \
+    && echo "Workflows copied: $(ls "$WF_DEST" | tr '\n' ' ')" \
+    || echo "WARN: workflow copy failed"
+else
+  echo "WARN: /tmp/temp_repo/workflows not found -- repo layout changed?"
+fi
+
+# 8. Start ComfyUI using the official RunPod entrypoint
 echo "Setup complete! Handing over to start script..."
 exec /start.sh
