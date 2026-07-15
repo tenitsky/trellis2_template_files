@@ -80,6 +80,17 @@ echo "Running node install.py build steps..."
 ( cd "$COMFYUI_PATH/custom_nodes/ComfyUI-TRELLIS2"    && "$PY" install.py ) || echo "WARN: TRELLIS2 install.py errors"
 ( cd "$COMFYUI_PATH/custom_nodes/ComfyUI-GeometryPack" && "$PY" install.py ) || echo "WARN: GeometryPack install.py errors"
 
+# 4.5. Pin numpy for numba compatibility (WAS Node Suite).
+#      numba requires numpy <= 2.4; the base image / node requirements can
+#      pull numpy 2.5, which makes every numba import (WAS_Node_Suite) blow
+#      up at load time. Pin AFTER steps 1-4 so nothing re-upgrades it later.
+echo "Pinning numpy for numba compatibility..."
+$PIP install "numpy>=2.0,<2.5"
+"$PY" - <<'EOF' || echo "WARN: numba/numpy still incompatible -- WAS nodes will not load"
+import numpy, numba
+print(f"numpy {numpy.__version__} + numba {numba.__version__}: OK")
+EOF
+
 # 5. Download TRELLIS.2 model weights (resume-safe; skipped if present)
 echo "Preparing model directories..."
 mkdir -p "$COMFYUI_PATH/models/trellis"
