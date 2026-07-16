@@ -1,0 +1,1021 @@
+{
+  "id": "993ef16b-b850-4a37-8e99-cdfe9b8651d3",
+  "revision": 0,
+  "last_node_id": 116,
+  "last_link_id": 198,
+  "nodes": [
+    {
+      "id": 83,
+      "type": "Trellis2ShapeToTexturedMesh",
+      "pos": [
+        417.6982138998612,
+        84.35246312094013
+      ],
+      "size": [
+        332.7662109375,
+        214
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_config",
+          "type": "TRELLIS2_MODEL_CONFIG",
+          "link": 169
+        },
+        {
+          "name": "conditioning",
+          "type": "TRELLIS2_CONDITIONING",
+          "link": 168
+        },
+        {
+          "name": "shape_slat",
+          "type": "TRELLIS2_SHAPE_SLAT",
+          "link": 166
+        },
+        {
+          "name": "subs",
+          "type": "TRELLIS2_SUBS",
+          "link": 167
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voxelgrid",
+          "type": "TRELLIS2_VOXELGRID",
+          "links": [
+            192
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "3e157f7b1548e3331d9b92939629b887e0384926",
+        "Node name for S&R": "Trellis2ShapeToTexturedMesh",
+        "aux_id": "PozzettiAndrea/ComfyUI-TRELLIS2"
+      },
+      "widgets_values": [
+        42,
+        "fixed",
+        3,
+        0.2,
+        12
+      ]
+    },
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        -2318.9377171614397,
+        -190.48262086222664
+      ],
+      "size": [
+        380.18522884880144,
+        337.3330365664778
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            131,
+            193
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.5.0",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "anton-tenitsky-lighter-tenitsky-001.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 82,
+      "type": "Trellis2ImageToShape",
+      "pos": [
+        -446.5297003107971,
+        -988.173047770021
+      ],
+      "size": [
+        308.890625,
+        290
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_config",
+          "type": "TRELLIS2_MODEL_CONFIG",
+          "link": 161
+        },
+        {
+          "name": "conditioning",
+          "type": "TRELLIS2_CONDITIONING",
+          "link": 160
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "type": "TRIMESH",
+          "links": [
+            185,
+            187
+          ]
+        },
+        {
+          "name": "shape_slat",
+          "type": "TRELLIS2_SHAPE_SLAT",
+          "links": [
+            166
+          ]
+        },
+        {
+          "name": "subs",
+          "type": "TRELLIS2_SUBS",
+          "links": [
+            167
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "3e157f7b1548e3331d9b92939629b887e0384926",
+        "Node name for S&R": "Trellis2ImageToShape",
+        "aux_id": "PozzettiAndrea/ComfyUI-TRELLIS2"
+      },
+      "widgets_values": [
+        42,
+        "fixed",
+        6.5,
+        0.05,
+        12,
+        6.5,
+        0.05,
+        12,
+        262144
+      ]
+    },
+    {
+      "id": 69,
+      "type": "Trellis2GetConditioning",
+      "pos": [
+        -1057.7077707709373,
+        -357.2745209140801
+      ],
+      "size": [
+        304.4527343750001,
+        128.60000000000002
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model_config",
+          "type": "TRELLIS2_MODEL_CONFIG",
+          "link": 129
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 131
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 195
+        }
+      ],
+      "outputs": [
+        {
+          "name": "conditioning",
+          "type": "TRELLIS2_CONDITIONING",
+          "links": [
+            160,
+            168
+          ]
+        },
+        {
+          "name": "preprocessed_image",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "aa154e8917f94c1d5a45536ecc63636dfdd1bf8b",
+        "Node name for S&R": "Trellis2GetConditioning",
+        "aux_id": "PozzettiAndrea/ComfyUI-TRELLIS2"
+      },
+      "widgets_values": [
+        "black"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "MaskPreview",
+      "pos": [
+        -1054.112539802056,
+        350.7489604629549
+      ],
+      "size": [
+        330.77672082519507,
+        246
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 196
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.5.1",
+        "Node name for S&R": "MaskPreview"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 109,
+      "type": "Note",
+      "pos": [
+        -1061.79308630025,
+        -169.55255893968496
+      ],
+      "size": [
+        312.533320201527,
+        172.36360279430045
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Encodes your image + mask (using the model_config) into the conditioning that drives 3D generation. \n\nbackground_color: fill color behind the subject before encoding — black is the safe default. \n\nOutputs conditioning and the preprocessed_image fed to the model."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 108,
+      "type": "Note",
+      "pos": [
+        -1046.39928136737,
+        651.3241744889907
+      ],
+      "size": [
+        317.8135613902698,
+        114.75545454545465
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Check background removal here if mask is not great recommend to cancel the Run."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 99,
+      "type": "Trellis2RemoveBackground",
+      "pos": [
+        -1662.3291334855799,
+        -36.63633863810573
+      ],
+      "size": [
+        309.04999389648435,
+        78
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 193
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            195,
+            196
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "9b878516f2dc2fd873f4f6cceadba403dd12d83e",
+        "Node name for S&R": "Trellis2RemoveBackground"
+      },
+      "widgets_values": [
+        true
+      ]
+    },
+    {
+      "id": 97,
+      "type": "Trellis2ProcessMesh",
+      "pos": [
+        387.74666784620024,
+        -987.7034563760434
+      ],
+      "size": [
+        323.12890625,
+        298
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "trimesh",
+          "type": "TRIMESH",
+          "link": 185
+        }
+      ],
+      "outputs": [
+        {
+          "name": "trimesh",
+          "type": "TRIMESH",
+          "links": [
+            188
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "037e84626b9fb2b379c2585e0389a68cf2ad8286",
+        "Node name for S&R": "Trellis2ProcessMesh"
+      },
+      "widgets_values": [
+        "on",
+        1,
+        true,
+        500000,
+        0.001,
+        true,
+        4,
+        90,
+        1,
+        1,
+        1
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 98,
+      "type": "Trellis2RasterizePBR",
+      "pos": [
+        896.641047009285,
+        -309.0720682033212
+      ],
+      "size": [
+        340.98669128417964,
+        98
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "trimesh",
+          "type": "TRIMESH",
+          "link": 188
+        },
+        {
+          "name": "voxelgrid",
+          "type": "TRELLIS2_VOXELGRID",
+          "link": 192
+        },
+        {
+          "name": "original_mesh",
+          "shape": 7,
+          "type": "TRIMESH",
+          "link": 187
+        }
+      ],
+      "outputs": [
+        {
+          "name": "trimesh",
+          "type": "TRIMESH",
+          "links": [
+            191
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "43e9c5a12804c31ce871da28e9ed6437511ca1fc",
+        "Node name for S&R": "Trellis2RasterizePBR"
+      },
+      "widgets_values": [
+        4096
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 86,
+      "type": "Trellis2ExportTrimesh",
+      "pos": [
+        1362.4807892917381,
+        -305.0074095376291
+      ],
+      "size": [
+        339.37191406249997,
+        90.06665435791012
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "trimesh",
+          "type": "TRIMESH",
+          "link": 191
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": [
+            163
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "3e157f7b1548e3331d9b92939629b887e0384926",
+        "Node name for S&R": "Trellis2ExportTrimesh",
+        "aux_id": "PozzettiAndrea/ComfyUI-TRELLIS2"
+      },
+      "widgets_values": [
+        "trellis2",
+        "glb"
+      ]
+    },
+    {
+      "id": 114,
+      "type": "Note",
+      "pos": [
+        898.7913036796537,
+        -151.4878671407824
+      ],
+      "size": [
+        334.7400830067029,
+        256.69699207652695
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Bakes the generated color into proper PBR texture maps on the mesh, combining the trimesh, textured voxelgrid, and original_mesh. \n\nOutputs the final textured trimesh ready for export.\n\ntexture_size (4096): output texture resolution. 4096 = high detail for close-ups/renders; drop to 2048 for game assets or lighter files."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 111,
+      "type": "Note",
+      "pos": [
+        -447.8499915184054,
+        -637.8548812593057
+      ],
+      "size": [
+        307.57738831345955,
+        337.6563491495082
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "The main 3D generation step.\n\nTakes model_config + conditioning and produces the mesh (plus shape_slat/subs for downstream nodes).\n\nseed / control after generate: fixed reuses the same seed for repeatable results; switch to randomize to explore variations.\n\n*ss_ (sparse structure)**: builds the coarse shape.\n\n*shape_ **: refines geometry.\n\nguidance_strength (~6.5): how strongly it follows your image — higher = more faithful but can over-constrain; lower = more creative.\n\nguidance_rescale (~0.05): stabilizer, leave as-is.\n\nsampling_steps (12): quality vs speed — raise for more detail, lower for faster gen.\n\nmax_tokens: mesh complexity ceiling; lower it if you hit VRAM limits."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 112,
+      "type": "Note",
+      "pos": [
+        396.7278088723417,
+        -626.3793930705856
+      ],
+      "size": [
+        310.9090631658379,
+        362.42423317649144
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Cleans and optimizes the raw trimesh into a production-ready mesh. Runs after generation, before texturing/export.\n\nremesh / remesh_band: rebuilds topology for cleaner, more even geometry.\n\nremove_inner_faces (true): deletes hidden internal faces — keep on for lighter meshes.\n\ntarget_face_count (500k): polygon budget. Lower it for game/real-time assets, raise for high-detail renders.\n\nfloater_threshold (0.001): removes stray disconnected bits; raise if you see floating debris.\n\nweld_vertices / weld_digits: merges duplicate verts to close seams; higher digits = stricter matching.\n\nchart_*: controls UV unwrapping quality for texturing — defaults are tuned, leave unless UVs look off."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 64,
+      "type": "Preview3D",
+      "pos": [
+        1869.282723617952,
+        -530.1045547598338
+      ],
+      "size": [
+        1092.162763880035,
+        891.305958841747
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "name": "bg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model_file",
+          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "widget": {
+            "name": "model_file"
+          },
+          "link": 163
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.5.1",
+        "Node name for S&R": "Preview3D",
+        "Camera Config": {
+          "cameraType": "perspective",
+          "fov": 75,
+          "state": {
+            "position": {
+              "x": 2.9630265602366923,
+              "y": 4.841774743921809,
+              "z": 2.963009379743049
+            },
+            "target": {
+              "x": 0.00009321183241236289,
+              "y": 2.4998753071909485,
+              "z": 0.00005975155063529311
+            },
+            "zoom": 1,
+            "cameraType": "perspective"
+          }
+        },
+        "Last Time Model File": "/workspace/runpod-slim/ComfyUI/output/trellis2_20260715_080215.glb",
+        "Resource Folder": "runpod-slim/ComfyUI/output",
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0.012818710864926558,
+                "y": 2.496607265443758,
+                "z": 0.0016030867745043809
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 4.988006877337401,
+                "y": 4.988006877337401,
+                "z": 4.988006877337401
+              }
+            }
+          ]
+        },
+        "Light Config": {
+          "intensity": 3,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
+        },
+        "Model Config": {
+          "upDirection": "original",
+          "materialMode": "original",
+          "showSkeleton": false,
+          "gizmo": {
+            "enabled": false,
+            "mode": "translate",
+            "position": {
+              "x": 0.012818710864926558,
+              "y": 2.496607265443758,
+              "z": 0.0016030867745043809
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 4.988006877337401,
+              "y": 4.988006877337401,
+              "z": 4.988006877337401
+            }
+          }
+        }
+      },
+      "widgets_values": [
+        "/workspace/runpod-slim/ComfyUI/output/trellis2_20260715_080215.glb",
+        ""
+      ]
+    },
+    {
+      "id": 116,
+      "type": "Note",
+      "pos": [
+        1878.8051173145006,
+        439.4328127354981
+      ],
+      "size": [
+        334.7400830067029,
+        256.69699207652695
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Interactive viewer for the generated mesh (model_file). \n\nRotate, pan, and zoom to inspect geometry and textures before export. \n\nLeft toolbar toggles wireframe, material/lighting view, and background image. bg_image and camera_info are optional inputs for custom preview framing."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 110,
+      "type": "Note",
+      "pos": [
+        -2319.2784738192922,
+        201.55500203950328
+      ],
+      "size": [
+        384.7763336910307,
+        440.2790495937234
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Upload the reference image to convert into 3D. Click \"choose file to upload\" or pick from the dropdown. \n\nFor best TRELLIS results:\n\nAim for roughly 1024×1024, or anywhere in the ~512–2048 range. The subject should fill most of the frame at that size. Square-ish is ideal since the model works from a centered subject.\n\nSingle, clearly-defined subject — one object centered in frame, not a scene or collage.\n\nClean/simple background (plain white or solid). \n\nBusy backgrounds confuse the shape; the Remove Background node helps but a clean input is better.\n\nFull object visible — no cropping or cut-off edges for better generation.\n\nEven, diffuse lighting — avoid harsh shadows, blown-out highlights, or strong reflections that hide geometry.\n\n3/4 or front-facing angle shows the most surface detail; flat side-on or top-down views give the model less to work with.\n\nSharp and well-lit — blur, low resolution, or dark images produce mushy meshes.\n\nAvoid transparent/reflective materials (glass, chrome, water) — they're hard to reconstruct accurately."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 107,
+      "type": "Note",
+      "pos": [
+        -1656.4005545486202,
+        100.03553849875111
+      ],
+      "size": [
+        306.6666759144175,
+        216.36363636363637
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Sets the core 3D model config. resolution: mesh detail (512 fast / 1024 balanced / 1536 max).\n\nprecision: leave auto (picks best for your GPU).\n\nattn_backend: leave auto. Downstream nodes read this config.\n\ncascade = two-pass generation (coarse mesh → refinement) for higher detail; slower and more VRAM than the single-pass option at the same resolution. Can be more glitchy.\n\nHigher resolution = sharper geometry but more VRAM and time."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 106,
+      "type": "Note",
+      "pos": [
+        -1683.299009185628,
+        -598.2470808000107
+      ],
+      "size": [
+        317.31467591441765,
+        216.36363636363637
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Sets the core 3D model config. resolution: mesh detail (512 fast / 1024 balanced / 1536 max).\n\nprecision: leave auto (picks best for your GPU).\n\nattn_backend: leave auto. Downstream nodes read this config.\n\ncascade = two-pass generation (coarse mesh → refinement) for higher detail; slower and more VRAM than the single-pass option at the same resolution. Can be more glitchy.\n\nHigher resolution = sharper geometry but more VRAM and time."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 68,
+      "type": "LoadTrellis2Models",
+      "pos": [
+        -1687.4262515972432,
+        -802.1991095450929
+      ],
+      "size": [
+        320.3122567107482,
+        152.17870989004217
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model_config",
+          "type": "TRELLIS2_MODEL_CONFIG",
+          "links": [
+            129,
+            161,
+            169
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-TRELLIS2",
+        "ver": "aa154e8917f94c1d5a45536ecc63636dfdd1bf8b",
+        "Node name for S&R": "LoadTrellis2Models",
+        "aux_id": "PozzettiAndrea/ComfyUI-TRELLIS2"
+      },
+      "widgets_values": [
+        "1024",
+        "auto",
+        "auto"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 113,
+      "type": "Note",
+      "pos": [
+        417.4144819899366,
+        352.909025627158
+      ],
+      "size": [
+        334.7400830067029,
+        256.69699207652695
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Generates the texture/color for your mesh, using the shape data (shape_slat, subs) + conditioning from earlier. \n\nOutputs the textured voxelgrid.\n\nseed / control after generate: fixed = repeatable texture; randomize to try different texture variations on the same shape.\n\ntex_guidance_strength (3.0): how closely the texture follows your input image — higher = more faithful to the source.\n\ntex_guidance_rescale (0.20): stabilizer, leave as-is.\n\ntex_sampling_steps (12): texture quality vs speed — raise for sharper detail."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 115,
+      "type": "Note",
+      "pos": [
+        1366.7423995043096,
+        -158.6687762877388
+      ],
+      "size": [
+        334.7400830067029,
+        256.69699207652695
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Saves the final textured mesh to disk and outputs its file_path.\n\nfilename_prefix (trellis2): name for the output file.\n\nfile_format (glb): glb is best for most uses — compact, single-file, packs textures in, works everywhere (game engines, web, 3D viewers). Switch to other formats only if your pipeline needs them."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      129,
+      68,
+      0,
+      69,
+      0,
+      "TRELLIS2_MODEL_CONFIG"
+    ],
+    [
+      131,
+      1,
+      0,
+      69,
+      1,
+      "IMAGE"
+    ],
+    [
+      160,
+      69,
+      0,
+      82,
+      1,
+      "TRELLIS2_CONDITIONING"
+    ],
+    [
+      161,
+      68,
+      0,
+      82,
+      0,
+      "TRELLIS2_MODEL_CONFIG"
+    ],
+    [
+      163,
+      86,
+      0,
+      64,
+      2,
+      "STRING"
+    ],
+    [
+      166,
+      82,
+      1,
+      83,
+      2,
+      "TRELLIS2_SHAPE_SLAT"
+    ],
+    [
+      167,
+      82,
+      2,
+      83,
+      3,
+      "TRELLIS2_SUBS"
+    ],
+    [
+      168,
+      69,
+      0,
+      83,
+      1,
+      "TRELLIS2_CONDITIONING"
+    ],
+    [
+      169,
+      68,
+      0,
+      83,
+      0,
+      "TRELLIS2_MODEL_CONFIG"
+    ],
+    [
+      185,
+      82,
+      0,
+      97,
+      0,
+      "TRIMESH"
+    ],
+    [
+      187,
+      82,
+      0,
+      98,
+      2,
+      "TRIMESH"
+    ],
+    [
+      188,
+      97,
+      0,
+      98,
+      0,
+      "TRIMESH"
+    ],
+    [
+      191,
+      98,
+      0,
+      86,
+      0,
+      "TRIMESH"
+    ],
+    [
+      192,
+      83,
+      0,
+      98,
+      1,
+      "TRELLIS2_VOXELGRID"
+    ],
+    [
+      193,
+      1,
+      0,
+      99,
+      0,
+      "IMAGE"
+    ],
+    [
+      195,
+      99,
+      1,
+      69,
+      2,
+      "MASK"
+    ],
+    [
+      196,
+      99,
+      1,
+      10,
+      0,
+      "MASK"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9090909090909097,
+      "offset": [
+        2554.2792635802257,
+        587.6789069465791
+      ]
+    },
+    "frontendVersion": "1.45.19",
+    "workflowRendererVersion": "LG"
+  },
+  "version": 0.4
+}
